@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Practice Task: Sponsorship Invitation Email</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Gate (access code) -->
+  <div id="gate" class="gate" role="dialog" aria-modal="true" aria-label="Access code gate">
+    <div class="gateCard">
+      <div class="gateBrand">
+        <div class="logo">FEthink</div>
+        <div>
+          <h1>Practice Task: Sponsorship Invitation</h1>
+          <p>Enter the access code from your Payhip lesson.</p>
+        </div>
+      </div>
+
+      <label class="gateLabel" for="codeInput">Access code</label>
+      <div class="gateRow">
+        <input id="codeInput" type="text" autocomplete="one-time-code" placeholder="e.g. FETHINK-EMAIL-02" />
+        <button id="unlockBtn" class="primary">Unlock</button>
+      </div>
+
+      <div id="gateMsg" class="gateMsg" aria-live="polite"></div>
+
+      <div class="gateHint">
+        Tip: this page opens in a new tab so you can return to your lesson easily.
+      </div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">FEthink</div>
+
+      <div class="title">
+        <h1>Practice Task: Sponsorship Invitation</h1>
+        <p>Use AI to help you plan a persuasive but tactful email to a long-standing customer.</p>
+        <span id="targetWords" style="display:none;"></span>
+      </div>
+
+      <div class="headerBtns">
+        <a id="backToCourse" class="linkBtn" href="#" target="_blank" rel="noopener noreferrer">Back to lesson</a>
+        <a id="nextLesson" class="linkBtn" href="#" target="_blank" rel="noopener noreferrer">Next: Quiz</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card">
+      <div class="twoCol">
+        <div class="panel">
+
+          <h2>Task</h2>
+          <!-- Use <pre> so section spacing/newlines show correctly -->
+          <pre id="questionText" class="subtle" style="white-space: pre-wrap; font-family: inherit;">Loading task…</pre>
+
+          <!-- Response box -->
+          <div class="templateBox">
+            <div class="templateHeader">
+              <h3>Your prompt (FEthink structure)</h3>
+              <div class="templateBtns">
+                <button id="insertTemplateBtn" class="secondary small">Insert template</button>
+                <button id="clearBtn" class="secondary small">Clear</button>
+              </div>
+            </div>
+
+            <textarea id="answerText" rows="16" placeholder="Write your prompt here..."></textarea>
+
+            <div class="actionsRow">
+              <button id="submitBtn" class="primary">Submit for feedback</button>
+              <div id="wordCountBox" class="scoreBox">Words: —</div>
+            </div>
+
+            <div class="hint">
+              Minimum to be marked: <strong><span id="minGate">20</span> words</strong>.
+              Keep your prompt within <strong>20–300 words</strong> for best results.
+            </div>
+          </div>
+
+          <!-- Feedback -->
+          <h2 style="margin-top: 18px;">Feedback</h2>
+
+          <div class="feedbackCard">
+            <div class="feedbackTop">
+              <div class="metric">
+                <div class="metricLabel">Score</div>
+                <div id="scoreBig" class="metricValue">—</div>
+              </div>
+              <div class="metric">
+                <div class="metricLabel">Word count</div>
+                <div id="wordCountBig" class="metricValue">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strengths -->
+          <div id="strengthsWrap" class="block" style="display:none;">
+            <h3>What you did well</h3>
+            <ul id="strengthsList" class="bullets"></ul>
+          </div>
+
+          <!-- Tags -->
+          <div id="tagsWrap" class="block" style="display:none;">
+            <h3>Feedback tags</h3>
+            <div id="tagsRow" class="tagsRow"></div>
+          </div>
+
+          <!-- Grid -->
+          <div id="gridWrap" class="block" style="display:none;">
+            <h3>Strengths & gaps</h3>
+            <div class="grid">
+              <div class="gridRow">
+                <div class="gridName">Role (who AI should be)</div>
+                <div id="gEthical" class="gridStatus">—</div>
+              </div>
+              <div class="gridRow">
+                <div class="gridName">Task (what AI should do)</div>
+                <div id="gImpact" class="gridStatus">—</div>
+              </div>
+              <div class="gridRow">
+                <div class="gridName">Context (situation + audience)</div>
+                <div id="gLegal" class="gridStatus">—</div>
+              </div>
+              <div class="gridRow">
+                <div class="gridName">Format (structure & constraints)</div>
+                <div id="gRecs" class="gridStatus">—</div>
+              </div>
+              <div class="gridRow">
+                <div class="gridName">Overall clarity</div>
+                <div id="gStructure" class="gridStatus">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Improvement notes -->
+          <div id="feedbackBox" class="feedbackBox" aria-live="polite"></div>
+
+          <!-- Learn more -->
+          <div id="learnMoreWrap" class="block" style="display:none;">
+            <button id="learnMoreBtn" class="secondary full" aria-expanded="false">
+              Learn more (bonus material)
+            </button>
+
+            <div id="frameworkPanel" class="frameworkPanel" style="display:none;" aria-hidden="true">
+              <div class="tabs" role="tablist" aria-label="Sponsorship email guidance tabs">
+                <button class="tabBtn active" type="button" role="tab" aria-selected="true" tabindex="0"
+                        data-tab="gdpr">Understanding existing customers</button>
+                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1"
+                        data-tab="unesco">Value-based selling</button>
+                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1"
+                        data-tab="ofsted">Tone and timing</button>
+                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1"
+                        data-tab="jisc">Budget objections</button>
+              </div>
+
+              <div class="tabPanel" role="tabpanel" data-panel="gdpr" aria-hidden="false" style="display:block;">
+                <div class="fwRow">
+                  <div class="fwTitle">Guidance</div>
+                  <div id="gdprExpectation" class="fwText">—</div>
+                </div>
+                <div class="fwRow">
+                  <div class="fwTitle">Details</div>
+                  <pre id="gdprCase" class="fwText" style="white-space:pre-wrap;">—</pre>
+                </div>
+              </div>
+
+              <div class="tabPanel" role="tabpanel" data-panel="unesco" aria-hidden="true" style="display:none;">
+                <div class="fwRow">
+                  <div class="fwTitle">Guidance</div>
+                  <div id="unescoExpectation" class="fwText">—</div>
+                </div>
+                <div class="fwRow">
+                  <div class="fwTitle">Details</div>
+                  <pre id="unescoCase" class="fwText" style="white-space:pre-wrap;">—</pre>
+                </div>
+              </div>
+
+              <div class="tabPanel" role="tabpanel" data-panel="ofsted" aria-hidden="true" style="display:none;">
+                <div class="fwRow">
+                  <div class="fwTitle">Guidance</div>
+                  <div id="ofstedExpectation" class="fwText">—</div>
+                </div>
+                <div class="fwRow">
+                  <div class="fwTitle">Details</div>
+                  <pre id="ofstedCase" class="fwText" style="white-space:pre-wrap;">—</pre>
+                </div>
+              </div>
+
+              <div class="tabPanel" role="tabpanel" data-panel="jisc" aria-hidden="true" style="display:none;">
+                <div class="fwRow">
+                  <div class="fwTitle">Guidance</div>
+                  <div id="jiscExpectation" class="fwText">—</div>
+                </div>
+                <div class="fwRow">
+                  <div class="fwTitle">Details</div>
+                  <pre id="jiscCase" class="fwText" style="white-space:pre-wrap;">—</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NEW: Model AI letter dropdown -->
+          <div id="modelLetterWrap" class="block" style="display:none;">
+            <button id="modelLetterBtn" class="secondary full" aria-expanded="false">
+              Model AI letter to customer
+            </button>
+
+            <div id="modelLetterPanel" class="frameworkPanel" style="display:none;" aria-hidden="true">
+              <div class="tabPanel" style="display:block;">
+                <div class="fwRow">
+                  <div class="fwTitle">Example output</div>
+                  <pre id="modelLetterText" class="fwText" style="white-space:pre-wrap;">—</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model answer prompt -->
+          <div id="modelWrap" class="modelWrap" style="display:none;">
+            <h3>Example of a strong prompt</h3>
+            <div class="subtle">Compare your prompt to the example below. You are not expected to match it exactly.</div>
+            <pre id="modelAnswer" class="modelAnswer"></pre>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>FEthink automarker • opened from Payhip (new tab) • return using “Next: Quiz”</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
