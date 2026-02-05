@@ -9,8 +9,9 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.static("public"));
 
 /* ---------------- Env / defaults ---------------- */
-const ACCESS_CODE = process.env.ACCESS_CODE || "FETHINK-EMAIL-02";
-const COOKIE_SECRET = process.env.COOKIE_SECRET || crypto.randomBytes(32).toString("hex");
+const ACCESS_CODE = process.env.ACCESS_CODE || "FETHINK-LETTER-2";
+const COOKIE_SECRET =
+  process.env.COOKIE_SECRET || crypto.randomBytes(32).toString("hex");
 const SESSION_MINUTES = parseInt(process.env.SESSION_MINUTES || "120", 10);
 
 const COURSE_BACK_URL = process.env.COURSE_BACK_URL || "";
@@ -41,14 +42,19 @@ function isSessionValid(req) {
 
   try {
     const payload = JSON.parse(raw);
-    return payload?.exp && Math.floor(Date.now() / 1000) < payload.exp;
+    return (
+      typeof payload?.exp === "number" &&
+      Math.floor(Date.now() / 1000) < payload.exp
+    );
   } catch {
     return false;
   }
 }
 
 function requireSession(req, res, next) {
-  if (!isSessionValid(req)) return res.status(401).json({ ok: false, error: "unauthorized" });
+  if (!isSessionValid(req)) {
+    return res.status(401).json({ ok: false, error: "unauthorized" });
+  }
   next();
 }
 
@@ -64,6 +70,12 @@ function wordCount(text) {
 function hasAny(text, needles) {
   const t = String(text || "").toLowerCase();
   return needles.some((n) => t.includes(n));
+}
+function timingSafeEquals(a, b) {
+  const aa = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  if (aa.length !== bb.length) return false;
+  return crypto.timingSafeEqual(aa, bb);
 }
 
 /* ---------------- Task content ---------------- */
@@ -155,10 +167,21 @@ const MODEL_AI_LETTER = [
 ].join("\n");
 
 /* ---------------- Detection + scoring ---------------- */
-const ROLE_HITS = ["role:", "act as", "events", "coordinator", "partnership"];
-const TASK_HITS = ["task:", "write", "draft", "email", "invite", "sponsor"];
-const CONTEXT_HITS = ["context:", "long-standing", "budget", "conference", "prospectus", "sponsor"];
-const FORMAT_HITS = ["format:", "paragraph", "tone", "call to action", "professional"];
+const ROLE_HITS = [
+  "role:",
+  "act as",
+  "events coordinator",
+  "events co-ordinator",
+  "event coordinator",
+  "event co-ordinator",
+  "coordinator",
+  "co-ordinator",
+  "partnership",
+  "partnerships"
+];
+const TASK_HITS = ["task:", "write", "draft", "email", "invite", "inviting", "sponsor", "sponsorship"];
+const CONTEXT_HITS = ["context:", "long-standing", "longstanding", "budget", "pressure", "conference", "prospectus", "print", "next week", "deadline", "customer", "client"];
+const FORMAT_HITS = ["format:", "4", "5", "paragraph", "tone", "warm", "concise", "call to action", "structure", "professional"];
 
 function statusFromLevel(level) {
   if (level >= 2) return "✓ Secure";
@@ -173,6 +196,8 @@ function tagStatus(level) {
 
 function markPrompt(answerText) {
   const wc = wordCount(answerText);
+
+  // HARD GATE
   if (wc < 20) {
     return {
       gated: true,
@@ -185,27 +210,121 @@ function markPrompt(answerText) {
       framework: null,
       modelAnswer: null,
       modelAiLetter: null
-modelAiLetter: MODEL_AI_LETTER
     };
   }
 
-  const t = answerText.toLowerCase();
+  const t = String(answerText || "").toLowerCase();
+
   const hasRole = hasAny(t, ROLE_HITS);
   const hasTask = hasAny(t, TASK_HITS);
   const hasContext = hasAny(t, CONTEXT_HITS);
   const hasFormat = hasAny(t, FORMAT_HITS);
+
   const presentCount = [hasRole, hasTask, hasContext, hasFormat].filter(Boolean).length;
 
-  let score = presentCount === 4 ? 9 : presentCount === 3 ? 7 : presentCount === 2 ? 5 : 2;
+  // bonus specificity (nudges 8–10)
+  const boosters =
+    (t.includes("budget") ? 1 : 0) +
+    (t.includes("next week") || t.includes("deadline") || t.includes("print") ? 1 : 0) +
+    (t.includes("call to action") || t.includes("reply") || t.includes("quick call") ? 1 : 0);
 
+  let score =
+    presentCount === 4 ? 8 + Math.min(2, boosters) :
+    presentCount === 3 ? 6 + Math.min(1, boosters) :
+    presentCount === 2 ? 4 + Math.min(1, boosters) :
+    2;
+
+  // Strengths
   const strengths = [];
   if (hasRole) strengths.push("You defined a clear role for the AI.");
   if (hasTask) strengths.push("You specified what the email should achieve.");
   if (hasContext) strengths.push("You included relevant audience context.");
   if (hasFormat) strengths.push("You set structure and tone constraints.");
+  if (strengths.length < 2) strengths.push("You’ve started shaping the prompt — add the missing RTCF stages for more control.");
 
+  // Tags
   const tags = [
     { name: "Role clarity", status: tagStatus(hasRole ? 2 : 0) },
     { name: "Task clarity", status: tagStatus(hasTask ? 2 : 0) },
     { name: "Context clarity", status: tagStatus(hasContext ? 2 : 0) },
     { name: "Format control", status: tagStatus(hasFormat ? 2 : 0) }
+  ];
+
+  // Grid (object-style, matches your current UI)
+  const grid = {
+    ethical: statusFromLevel(hasRole ? 2 : 0),
+    impact: statusFromLevel(hasTask ? 2 : 0),
+    legal: statusFromLevel(hasContext ? 2 : 0),
+    recs: statusFromLevel(hasFormat ? 2 : 0),
+    structure: statusFromLevel(presentCount === 4 ? 2 : presentCount >= 2 ? 1 : 0)
+  };
+
+  // Feedback text
+  const missing = [];
+  if (!hasRole) missing.push("Role: tell AI who to be (events/partnerships role).");
+  if (!hasTask) missing.push("Task: specify the output (invitation email asking to sponsor a stall).");
+  if (!hasContext) missing.push("Context: include audience details (relationship, budget pressure, print deadline next week).");
+  if (!hasFormat) missing.push("Format: set structure/tone (4–5 short paragraphs, warm, persuasive, tactful, clear call to action).");
+
+  const feedback =
+    missing.length === 0
+      ? "Strong prompt — you gave AI a clear role, purpose, audience context and formatting constraints."
+      : "To improve:\n- " + missing.join("\n- ");
+
+  return {
+    gated: false,
+    wordCount: wc,
+    score,
+    strengths: strengths.slice(0, 3),
+    tags,
+    grid,
+    framework: FRAMEWORK,
+    feedback,
+    modelAnswer: MODEL_ANSWER,
+    modelAiLetter: MODEL_AI_LETTER
+  };
+}
+
+/* ---------------- Routes ---------------- */
+app.get("/api/config", (_req, res) => {
+  res.json({
+    ok: true,
+    questionText: QUESTION_TEXT,
+    templateText: TEMPLATE_TEXT,
+    targetWords: "20–300",
+    minWordsGate: 20,
+    maxWords: 300,
+    courseBackUrl: COURSE_BACK_URL,
+    nextLessonUrl: NEXT_LESSON_URL
+  });
+});
+
+app.post("/api/unlock", (req, res) => {
+  const code = clampStr(req.body?.code || "", 80).trim();
+  if (!code) return res.status(400).json({ ok: false, error: "missing_code" });
+
+  if (!timingSafeEquals(code, ACCESS_CODE)) {
+    return res.status(401).json({ ok: false, error: "incorrect_code" });
+  }
+
+  setSessionCookie(res);
+  return res.json({ ok: true });
+});
+
+app.post("/api/mark", requireSession, (req, res) => {
+  const answerText = clampStr(req.body?.answerText || req.body?.answer || "", 6000);
+  const result = markPrompt(answerText);
+  res.json({ ok: true, result });
+});
+
+app.post("/api/logout", (_req, res) => {
+  res.clearCookie(COOKIE_NAME);
+  res.json({ ok: true });
+});
+
+app.get("/health", (_req, res) => res.status(200).send("ok"));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`FEthink automarker running on port ${PORT}`);
+});
