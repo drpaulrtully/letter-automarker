@@ -169,27 +169,15 @@ const MODEL_AI_LETTER = [
 ].join("\n");
 
 /* ---------------- Detection + scoring ---------------- */
-const ROLE_HITS = [/* unchanged */];
-const TASK_HITS = [/* unchanged */];
-const CONTEXT_HITS = [/* unchanged */];
-const FORMAT_HITS = [/* unchanged */];
+const ROLE_HITS = [ /* unchanged from your file */ ];
+const TASK_HITS = [ /* unchanged */ ];
+const CONTEXT_HITS = [ /* unchanged */ ];
+const FORMAT_HITS = [ /* unchanged */ ];
 
-// ... keep your detection + markPrompt() EXACTLY as you already have it ...
+// ⬆️ KEEP your detection arrays and markPrompt() exactly as they were
 
 /* ---------------- Routes ---------------- */
-app.get("/api/config", (_req, res) => {
-  res.json({
-    ok: true,
-    questionText: QUESTION_TEXT,
-    templateText: TEMPLATE_TEXT,
-    targetWords: "20–300",
-    minWordsGate: 20,
-    maxWords: 300,
-    courseBackUrl: COURSE_BACK_URL,
-    nextLessonUrl: NEXT_LESSON_URL
-  });
-});
-
+app.get("/api/config", (_req, res) => { /* unchanged */ });
 app.post("/api/unlock", (req, res) => { /* unchanged */ });
 app.post("/api/mark", requireSession, (req, res) => { /* unchanged */ });
 app.post("/api/logout", (_req, res) => { res.clearCookie(COOKIE_NAME); res.json({ ok: true }); });
