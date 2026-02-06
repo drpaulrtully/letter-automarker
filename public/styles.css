@@ -524,3 +524,11 @@ button.full[aria-expanded="true"]::after{
   color: var(--muted);
   font-size:12px;
 }
+/* --- Model AI letter: prevent panel looking like a thin divider --- */
+#modelLetterPanel .fwRow {
+  padding: 10px 12px;
+}
+
+#modelLetterText {
+  margin-top: 6px;
+}

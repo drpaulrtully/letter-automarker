@@ -6,6 +6,7 @@
   <title>Practice Task: Sponsorship Invitation Email</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
 
   <!-- Gate (access code) -->
@@ -56,7 +57,6 @@
         <div class="panel">
 
           <h2>Task</h2>
-          <!-- Use <pre> so section spacing/newlines show correctly -->
           <pre id="questionText" class="subtle" style="white-space: pre-wrap; font-family: inherit;">Loading task…</pre>
 
           <!-- Response box -->
@@ -148,14 +148,18 @@
 
             <div id="frameworkPanel" class="frameworkPanel" style="display:none;" aria-hidden="true">
               <div class="tabs" role="tablist" aria-label="Sponsorship email guidance tabs">
-                <button class="tabBtn active" type="button" role="tab" aria-selected="true" tabindex="0"
-                        data-tab="gdpr">Understanding existing customers</button>
-                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1"
-                        data-tab="unesco">Value-based selling</button>
-                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1"
-                        data-tab="ofsted">Tone and timing</button>
-                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1"
-                        data-tab="jisc">Budget objections</button>
+                <button class="tabBtn active" type="button" role="tab" aria-selected="true" tabindex="0" data-tab="gdpr">
+                  Understanding existing customers
+                </button>
+                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="unesco">
+                  Value-based selling
+                </button>
+                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="ofsted">
+                  Tone and timing
+                </button>
+                <button class="tabBtn" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="jisc">
+                  Budget objections
+                </button>
               </div>
 
               <div class="tabPanel" role="tabpanel" data-panel="gdpr" aria-hidden="false" style="display:block;">
@@ -204,7 +208,14 @@
             </div>
           </div>
 
-          <!-- NEW: Model AI letter dropdown -->
+          <!-- ✅ Model prompt answer FIRST -->
+          <div id="modelWrap" class="modelWrap" style="display:none;">
+            <h3>Example of a strong prompt</h3>
+            <div class="subtle">Compare your prompt to the example below. You are not expected to match it exactly.</div>
+            <pre id="modelAnswer" class="modelAnswer"></pre>
+          </div>
+
+          <!-- ✅ Model AI letter SECOND -->
           <div id="modelLetterWrap" class="block" style="display:none;">
             <button id="modelLetterBtn" class="secondary full" aria-expanded="false">
               Model AI letter to customer
@@ -220,15 +231,8 @@
             </div>
           </div>
 
-          <!-- Model answer prompt -->
-          <div id="modelWrap" class="modelWrap" style="display:none;">
-            <h3>Example of a strong prompt</h3>
-            <div class="subtle">Compare your prompt to the example below. You are not expected to match it exactly.</div>
-            <pre id="modelAnswer" class="modelAnswer"></pre>
-          </div>
-
-        </div>
-      </div>
+        </div><!-- /.panel -->
+      </div><!-- /.twoCol -->
     </section>
   </main>
 
