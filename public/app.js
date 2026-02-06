@@ -75,19 +75,34 @@ console.log("FEthink app.js build: LETTER2-20260206");
   const modelLetterText = document.getElementById("modelLetterText");
 
 // Bulletproof delegated toggle for Model AI letter
-document.addEventListener("click", (e) => {
-  const btn = e.target && e.target.closest ? e.target.closest("#modelLetterBtn") : null;
-  if (!btn) return;
+// IMPROVED: Direct toggle for Model AI letter (reliable, with logging)
+if (modelLetterBtn && modelLetterPanel) {
+  modelLetterBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("✅ Model letter button clicked!");
+    
+    const isOpen = modelLetterPanel.style.display === "block";
+    if (isOpen) {
+      modelLetterPanel.style.display = "none";
+      modelLetterPanel.setAttribute("aria-hidden", "true");
+      modelLetterBtn.setAttribute("aria-expanded", "false");
+      console.log("❌ Panel closed");
+    } else {
+      modelLetterPanel.style.display = "block";
+      modelLetterPanel.setAttribute("aria-hidden", "false");
+      modelLetterBtn.setAttribute("aria-expanded", "true");
+      console.log("✅ Panel opened");
+    }
+  });
+  
+  // TEMP TEST BUTTON (remove later)
+  window.testLetter = function() {
+    renderModelLetter("Dear Customer,\n\nThis is a test AI letter.\n\nBest,\nFEthink");
+    console.log("🧪 Test letter loaded - now click button!");
+  };
+}
 
-  const panel = document.getElementById("modelLetterPanel");
-  if (!panel) return;
-
-  const isOpen = panel.style.display === "block";
-
-  panel.style.display = isOpen ? "none" : "block";
-  panel.setAttribute("aria-hidden", isOpen ? "true" : "false");
-  btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
-});
 
   // ---------------- Local state ----------------
   let TEMPLATE_TEXT = "";
