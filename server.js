@@ -408,6 +408,46 @@ app.post("/api/logout", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => res.status(200).send("ok"));
+import fs from "fs";
+import path from "path";
+
+app.get("/__diag", (_req, res) => {
+  const cwd = process.cwd();
+  const publicDir = path.join(cwd, "public");
+  const indexPath = path.join(publicDir, "index.html");
+
+  let publicExists = false;
+  let indexExists = false;
+  let publicFiles = [];
+  let indexPreview = "";
+
+  try {
+    publicExists = fs.existsSync(publicDir);
+    indexExists = fs.existsSync(indexPath);
+    if (publicExists) {
+      publicFiles = fs.readdirSync(publicDir).slice(0, 50);
+    }
+    if (indexExists) {
+      indexPreview = fs.readFileSync(indexPath, "utf8").slice(0, 400);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  res.json({
+    cwd,
+    publicDir,
+    publicExists,
+    indexPath,
+    indexExists,
+    publicFiles,
+    indexPreview,
+    renderServiceId: process.env.RENDER_SERVICE_ID || null,
+    renderGitCommit: process.env.RENDER_GIT_COMMIT || null,
+    nodeEnv: process.env.NODE_ENV || null
+  });
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
