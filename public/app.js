@@ -553,6 +553,3 @@ if (modelLetterBtn && modelLetterPanel) {
       showGate("Please enter the access code from your Payhip lesson.");
     });
 })();
-document.getElementById("modelLetterBtn").addEventListener("click", () => {
-  document.getElementById("modelLetterWrap").classList.toggle("open");
-});
