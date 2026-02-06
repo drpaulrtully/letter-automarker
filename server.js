@@ -453,3 +453,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`FEthink automarker running on port ${PORT}`);
 });
+Edit diag route to check deployed files
