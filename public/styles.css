@@ -524,34 +524,26 @@ button.full[aria-expanded="true"]::after{
   color: var(--muted);
   font-size:12px;
 }
-/* --- Model AI letter: prevent panel looking like a thin divider --- */
-#modelLetterPanel .fwRow {
-  padding: 10px 12px;
-}
+/* --- Model AI letter dropdown (clean + reliable) --- */
+#modelLetterWrap { margin-top: var(--s4); }
 
-#modelLetterText {
-  margin-top: 6px;
-}
-/* If anything invisible is blocking clicks, this reveals it fast */
-#gate[style*="display: none"] { pointer-events: none; }
-#modelLetterPanel {
-  overflow: visible !important;
-  max-height: none !important;
-  z-index: 10;
-}
 #modelLetterPanel {
   display: none;
+  overflow: visible;
+  max-height: none;
+  position: relative;
+  z-index: 10;
 }
 
 #modelLetterWrap.open #modelLetterPanel {
   display: block;
 }
 
-#modelLetterWrap {
-  overflow: visible;
-  position
+#modelLetterPanel .fwRow {
+  padding: 10px 12px;
+}
 
-/* DROPDOWN FULLY VISIBLE */
-#modelLetterPanel, 
-#modelLetterWrap {
-  overflow
+#modelLetterText {
+  margin-top: 6px;
+  white-space: pre-wrap;
+}
