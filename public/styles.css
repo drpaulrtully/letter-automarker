@@ -543,3 +543,7 @@ button.full[aria-expanded="true"]::after{
   overflow: visible;
   position
 
+/* DROPDOWN FULLY VISIBLE */
+#modelLetterPanel, 
+#modelLetterWrap {
+  overflow
