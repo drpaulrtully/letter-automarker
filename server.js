@@ -2,8 +2,6 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
 
 const app = express();
 app.use(cors());
@@ -11,7 +9,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.static("public"));
 
 /* ---------------- Env / defaults ---------------- */
-const ACCESS_CODE = process.env.ACCESS_CODE || "FETHINK-LETTER-2";
+const ACCESS_CODE = process.env.ACCESS_CODE || "FETHINK-LETTER-02";
 const COOKIE_SECRET =
   process.env.COOKIE_SECRET || crypto.randomBytes(32).toString("hex");
 const SESSION_MINUTES = parseInt(process.env.SESSION_MINUTES || "120", 10);
@@ -147,7 +145,7 @@ const FRAMEWORK = {
   }
 };
 
-/* ---------------- Model AI letter ---------------- */
+/* ---------------- Model AI letter (extra dropdown panel) ---------------- */
 const MODEL_AI_LETTER = [
   "Subject: Invitation to Sponsor at This Year’s Training Conference",
   "",
@@ -169,21 +167,250 @@ const MODEL_AI_LETTER = [
 ].join("\n");
 
 /* ---------------- Detection + scoring ---------------- */
-const ROLE_HITS = [ /* unchanged from your file */ ];
-const TASK_HITS = [ /* unchanged */ ];
-const CONTEXT_HITS = [ /* unchanged */ ];
-const FORMAT_HITS = [ /* unchanged */ ];
+const ROLE_HITS = [
+  "role:",
+  "act as",
+  "as an",
+  "as a",
+  "events coordinator",
+  "event coordinator",
+  "events co-ordinator",
+  "event co-ordinator",
+  "events coordinator",
+  "events co ordinator",
+  "event coordinator",
+  "event co ordinator",
+  "coordinator",
+  "co-ordinator",
+  "co ordinator",
+  "events lead",
+  "events manager",
+  "partnership lead",
+  "partnerships lead",
+  "partnership manager",
+  "partnerships manager",
+  "sponsorship manager",
+  "partnerships and events",
+  "events and partnerships"
+];
 
-// ⬆️ KEEP your detection arrays and markPrompt() exactly as they were
+const TASK_HITS = [
+  "task:",
+  "write",
+  "draft",
+  "compose",
+  "prepare",
+  "email",
+  "message",
+  "inviting",
+  "invite",
+  "invitation",
+  "request",
+  "approach",
+  "ask",
+  "sponsor",
+  "sponsorship",
+  "exhibition",
+  "stall"
+];
+
+const CONTEXT_HITS = [
+  "context:",
+  "audience:",
+  "long-standing",
+  "longstanding",
+  "long term",
+  "long-term",
+  "loyal customer",
+  "existing customer",
+  "customer",
+  "client",
+  "relationship",
+  "partnership",
+  "budget",
+  "pressure",
+  "budget pressures",
+  "financial",
+  "conference",
+  "annual conference",
+  "exhibition",
+  "prospectus",
+  "print",
+  "deadline",
+  "next week",
+  "time is limited",
+  "time limited",
+  "urgent"
+];
+
+const FORMAT_HITS = [
+  "format:",
+  "structure",
+  "tone",
+  "professional",
+  "warm",
+  "courteous",
+  "concise",
+  "polite",
+  "4 paragraphs",
+  "5 paragraphs",
+  "four paragraphs",
+  "five paragraphs",
+  "short paragraphs",
+  "call to action",
+  "cta",
+  "closing",
+  "sign off",
+  "clear next step"
+];
+
+function statusFromLevel(level) {
+  if (level >= 2) return "✓ Secure";
+  if (level === 1) return "◐ Developing";
+  return "✗ Missing";
+}
+function tagStatus(level) {
+  if (level >= 2) return "ok";
+  if (level === 1) return "mid";
+  return "bad";
+}
+
+function markPrompt(answerText) {
+  const wc = wordCount(answerText);
+
+  // HARD GATE
+  if (wc < 20) {
+    return {
+      gated: true,
+      wordCount: wc,
+      message: "Please add more detail and include Role, Task, Context and Format.",
+      score: null,
+      strengths: null,
+      tags: null,
+      grid: null,
+      framework: null,
+      modelAnswer: null,
+      modelAiLetter: null
+    };
+  }
+
+const t = String(answerText || "")
+  .toLowerCase()
+  .replaceAll("–", "-")
+  .replaceAll("—", "-")
+  .replaceAll("’", "'");
+
+  const hasRole = hasAny(t, ROLE_HITS);
+  const hasTask = hasAny(t, TASK_HITS);
+  const hasContext = hasAny(t, CONTEXT_HITS);
+  const hasFormat = hasAny(t, FORMAT_HITS);
+
+  const presentCount = [hasRole, hasTask, hasContext, hasFormat].filter(Boolean).length;
+
+  // bonus specificity (nudges 8–10)
+  const boosters =
+    (t.includes("budget") ? 1 : 0) +
+    (t.includes("next week") || t.includes("deadline") || t.includes("print") ? 1 : 0) +
+    (t.includes("call to action") || t.includes("reply") || t.includes("quick call") ? 1 : 0);
+
+  let score =
+    presentCount === 4 ? 8 + Math.min(2, boosters) :
+    presentCount === 3 ? 6 + Math.min(1, boosters) :
+    presentCount === 2 ? 4 + Math.min(1, boosters) :
+    2;
+
+  // Strengths
+  const strengths = [];
+  if (hasRole) strengths.push("You defined a clear role for the AI.");
+  if (hasTask) strengths.push("You specified what the email should achieve.");
+  if (hasContext) strengths.push("You included relevant audience context.");
+  if (hasFormat) strengths.push("You set structure and tone constraints.");
+  if (strengths.length < 2) strengths.push("You’ve started shaping the prompt — add the missing RTCF stages for more control.");
+
+  // Tags
+  const tags = [
+    { name: "Role clarity", status: tagStatus(hasRole ? 2 : 0) },
+    { name: "Task clarity", status: tagStatus(hasTask ? 2 : 0) },
+    { name: "Context clarity", status: tagStatus(hasContext ? 2 : 0) },
+    { name: "Format control", status: tagStatus(hasFormat ? 2 : 0) }
+  ];
+
+  // Grid (object-style, matches your current UI)
+  const grid = {
+    ethical: statusFromLevel(hasRole ? 2 : 0),
+    impact: statusFromLevel(hasTask ? 2 : 0),
+    legal: statusFromLevel(hasContext ? 2 : 0),
+    recs: statusFromLevel(hasFormat ? 2 : 0),
+    structure: statusFromLevel(presentCount === 4 ? 2 : presentCount >= 2 ? 1 : 0)
+  };
+
+  // Feedback text
+  const missing = [];
+  if (!hasRole) missing.push("Role: tell AI who to be (events/partnerships role).");
+  if (!hasTask) missing.push("Task: specify the output (invitation email asking to sponsor a stall).");
+  if (!hasContext) missing.push("Context: include audience details (relationship, budget pressure, print deadline next week).");
+  if (!hasFormat) missing.push("Format: set structure/tone (4–5 short paragraphs, warm, persuasive, tactful, clear call to action).");
+
+  const feedback =
+    missing.length === 0
+      ? "Strong prompt — you gave AI a clear role, purpose, audience context and formatting constraints."
+      : "To improve:\n- " + missing.join("\n- ");
+
+  return {
+    gated: false,
+    wordCount: wc,
+    score,
+    strengths: strengths.slice(0, 3),
+    tags,
+    grid,
+    framework: FRAMEWORK,
+    feedback,
+    modelAnswer: MODEL_ANSWER,
+    modelAiLetter: MODEL_AI_LETTER
+  };
+}
 
 /* ---------------- Routes ---------------- */
-app.get("/api/config", (_req, res) => { /* unchanged */ });
-app.post("/api/unlock", (req, res) => { /* unchanged */ });
-app.post("/api/mark", requireSession, (req, res) => { /* unchanged */ });
-app.post("/api/logout", (_req, res) => { res.clearCookie(COOKIE_NAME); res.json({ ok: true }); });
-app.get("/health", (_req, res) => res.status(200).send("ok"));
+app.get("/api/config", (_req, res) => {
+  res.json({
+    ok: true,
+    questionText: QUESTION_TEXT,
+    templateText: TEMPLATE_TEXT,
+    targetWords: "20–300",
+    minWordsGate: 20,
+    maxWords: 300,
+    courseBackUrl: COURSE_BACK_URL,
+    nextLessonUrl: NEXT_LESSON_URL
+  });
+});
 
-/* ---------------- Diagnostics ---------------- */
+app.post("/api/unlock", (req, res) => {
+  const code = clampStr(req.body?.code || "", 80).trim();
+  if (!code) return res.status(400).json({ ok: false, error: "missing_code" });
+
+  if (!timingSafeEquals(code, ACCESS_CODE)) {
+    return res.status(401).json({ ok: false, error: "incorrect_code" });
+  }
+
+  setSessionCookie(res);
+  return res.json({ ok: true });
+});
+
+app.post("/api/mark", requireSession, (req, res) => {
+  const answerText = clampStr(req.body?.answerText || req.body?.answer || "", 6000);
+  const result = markPrompt(answerText);
+  res.json({ ok: true, result });
+});
+
+app.post("/api/logout", (_req, res) => {
+  res.clearCookie(COOKIE_NAME);
+  res.json({ ok: true });
+});
+
+app.get("/health", (_req, res) => res.status(200).send("ok"));
+import fs from "fs";
+import path from "path";
+
 app.get("/__diag", (_req, res) => {
   const cwd = process.cwd();
   const publicDir = path.join(cwd, "public");
@@ -197,9 +424,15 @@ app.get("/__diag", (_req, res) => {
   try {
     publicExists = fs.existsSync(publicDir);
     indexExists = fs.existsSync(indexPath);
-    if (publicExists) publicFiles = fs.readdirSync(publicDir).slice(0, 50);
-    if (indexExists) indexPreview = fs.readFileSync(indexPath, "utf8").slice(0, 400);
-  } catch {}
+    if (publicExists) {
+      publicFiles = fs.readdirSync(publicDir).slice(0, 50);
+    }
+    if (indexExists) {
+      indexPreview = fs.readFileSync(indexPath, "utf8").slice(0, 400);
+    }
+  } catch (e) {
+    // ignore
+  }
 
   res.json({
     cwd,
@@ -214,6 +447,7 @@ app.get("/__diag", (_req, res) => {
     nodeEnv: process.env.NODE_ENV || null
   });
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
