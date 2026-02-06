@@ -534,3 +534,12 @@ button.full[aria-expanded="true"]::after{
 }
 /* If anything invisible is blocking clicks, this reveals it fast */
 #gate[style*="display: none"] { pointer-events: none; }
+#modelLetterPanel {
+  overflow: visible !important;
+  max-height: none !important;
+  z-index: 10;
+}
+#modelLetterWrap {
+  overflow: visible;
+  position
+
