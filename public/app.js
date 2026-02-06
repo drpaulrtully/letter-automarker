@@ -9,6 +9,7 @@
    ========================================================= */
 
 (function () {
+console.log("FEthink app.js build: LETTER2-20260206");
   // ---------------- DOM refs (null-safe) ----------------
   const gateEl = document.getElementById("gate");
   const codeInput = document.getElementById("codeInput");
@@ -360,21 +361,24 @@
 
   // ---------------- Render Model AI letter ----------------
   function renderModelLetter(letterText) {
-    if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
+  if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
 
-    if (!letterText) {
-      modelLetterWrap.style.display = "none";
-      return;
-    }
+  const txt = String(letterText || "").trim();
 
-    modelLetterText.textContent = letterText;
-
-    // show wrapper, keep collapsed by default
-    modelLetterWrap.style.display = "block";
-    modelLetterPanel.style.display = "none";
-    modelLetterPanel.setAttribute("aria-hidden", "true");
-    modelLetterBtn.setAttribute("aria-expanded", "false");
+  if (!txt) {
+    modelLetterWrap.style.display = "none";
+    modelLetterText.textContent = "";
+    return;
   }
+
+  modelLetterText.textContent = txt;
+
+  // show wrapper, keep collapsed by default
+  modelLetterWrap.style.display = "block";
+  modelLetterPanel.style.display = "none";
+  modelLetterPanel.setAttribute("aria-hidden", "true");
+  modelLetterBtn.setAttribute("aria-expanded", "false");
+}
 
   // ---------------- Render strengths/tags/grid ----------------
   function renderStrengths(strengths) {
