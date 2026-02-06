@@ -74,25 +74,34 @@ console.log("FEthink app.js build: LETTER2-20260206");
   const modelLetterPanel = document.getElementById("modelLetterPanel");
   const modelLetterText = document.getElementById("modelLetterText");
 
-
-  // ---------------- Model AI letter toggle (single, reliable block) ----------------
-  // One click handler only. Opens/closes by toggling wrapper .open, and also sets panel display for robustness.
-  if (modelLetterWrap && modelLetterBtn && modelLetterPanel) {
-    modelLetterBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      console.log("✅ Model letter button clicked");
-
-      // Ensure wrapper is visible (it may be hidden until a letter is returned by the server)
-      if (modelLetterWrap.style.display === "none") modelLetterWrap.style.display = "block";
-
-      const isOpen = modelLetterWrap.classList.toggle("open");
-      modelLetterBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      modelLetterPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
-      modelLetterPanel.style.display = isOpen ? "block" : "none";
-
-      console.log("✅ Model letter:", isOpen ? "OPEN" : "CLOSED");
-    });
-  }
+// Bulletproof delegated toggle for Model AI letter
+// IMPROVED: Direct toggle for Model AI letter (reliable, with logging)
+if (modelLetterBtn && modelLetterPanel) {
+  modelLetterBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("✅ Model letter button clicked!");
+    
+    const isOpen = modelLetterPanel.style.display === "block";
+    if (isOpen) {
+      modelLetterPanel.style.display = "none";
+      modelLetterPanel.setAttribute("aria-hidden", "true");
+      modelLetterBtn.setAttribute("aria-expanded", "false");
+      console.log("❌ Panel closed");
+    } else {
+      modelLetterPanel.style.display = "block";
+      modelLetterPanel.setAttribute("aria-hidden", "false");
+      modelLetterBtn.setAttribute("aria-expanded", "true");
+      console.log("✅ Panel opened");
+    }
+  });
+  
+  // TEMP TEST BUTTON (remove later)
+  window.testLetter = function() {
+    renderModelLetter("Dear Customer,\n\nThis is a test AI letter.\n\nBest,\nFEthink");
+    console.log("🧪 Test letter loaded - now click button!");
+  };
+}
 
 
   // ---------------- Local state ----------------
@@ -128,13 +137,15 @@ console.log("FEthink app.js build: LETTER2-20260206");
   }
 
   function resetExtras() {
-    // Strengths/tags/grid
+    // Strengths
     if (strengthsWrap) strengthsWrap.style.display = "none";
     if (strengthsList) strengthsList.innerHTML = "";
 
+    // Tags
     if (tagsWrap) tagsWrap.style.display = "none";
     if (tagsRow) tagsRow.innerHTML = "";
 
+    // Grid
     if (gridWrap) gridWrap.style.display = "none";
     if (gEthical) gEthical.textContent = "—";
     if (gImpact) gImpact.textContent = "—";
@@ -166,7 +177,6 @@ console.log("FEthink app.js build: LETTER2-20260206");
 
     // Model AI letter
     if (modelLetterWrap) modelLetterWrap.style.display = "none";
-    if (modelLetterWrap) modelLetterWrap.classList.remove("open");
     if (modelLetterPanel) {
       modelLetterPanel.style.display = "none";
       modelLetterPanel.setAttribute("aria-hidden", "true");
@@ -199,49 +209,27 @@ console.log("FEthink app.js build: LETTER2-20260206");
         nextLesson.style.display = "inline-block";
       }
 
-      // TASK CONTENT
-      if (questionTextEl && data.taskTitle) questionTextEl.textContent = data.taskTitle;
-      if (targetWordsEl) targetWordsEl.textContent = String(data.targetWords ?? data.maxWords ?? 300);
+      if (questionTextEl) questionTextEl.textContent = data.questionText || "Task loaded.";
+      if (targetWordsEl) targetWordsEl.textContent = data.targetWords || "20–300";
 
-      TEMPLATE_TEXT = data.templateText || "";
-      MIN_GATE = Number(data.minWords || 20);
+      MIN_GATE = data.minWordsGate ?? 20;
       if (minGateEl) minGateEl.textContent = String(MIN_GATE);
 
-      // Gate visibility
-      if (data.gated === true) {
-        showGate("");
-      } else {
-        hideGate();
-      }
-
-      // Initial reset
-      resetFeedback();
-      updateWordCount();
+      TEMPLATE_TEXT = data.templateText || "";
     } catch (e) {
-      console.error("Config load failed:", e);
+      console.error("loadConfig failed:", e);
     }
-  }
-
-  // ---------------- Word count live ----------------
-  function updateWordCount() {
-    const count = wc(answerTextEl?.value || "");
-    if (wordCountBox) wordCountBox.textContent = String(count);
-  }
-
-  if (answerTextEl) {
-    answerTextEl.addEventListener("input", () => {
-      updateWordCount();
-      resetFeedback();
-    });
   }
 
   // ---------------- Gate unlock ----------------
   async function unlock() {
-    const code = String(codeInput?.value || "").trim();
+    const code = (codeInput?.value || "").trim();
     if (!code) {
-      if (gateMsg) gateMsg.textContent = "Please enter the access code.";
+      if (gateMsg) gateMsg.textContent = "Please enter the access code from your lesson.";
       return;
     }
+
+    if (unlockBtn) unlockBtn.disabled = true;
     if (gateMsg) gateMsg.textContent = "Checking…";
 
     try {
@@ -254,16 +242,18 @@ console.log("FEthink app.js build: LETTER2-20260206");
 
       const data = await res.json();
 
-      if (data?.ok) {
-        if (gateMsg) gateMsg.textContent = "Unlocked — loading…";
-        hideGate();
-        await loadConfig();
-      } else {
-        if (gateMsg) gateMsg.textContent = data?.error || "Invalid code.";
+      if (!res.ok || !data?.ok) {
+        if (gateMsg) gateMsg.textContent = "That code didn’t work. Check it and try again.";
+        return;
       }
+
+      hideGate();
+      await loadConfig();
     } catch (e) {
-      if (gateMsg) gateMsg.textContent = "Could not unlock. Please try again.";
-      console.error(e);
+      if (gateMsg) gateMsg.textContent = "Network issue. Please try again.";
+      console.error("unlock failed:", e);
+    } finally {
+      if (unlockBtn) unlockBtn.disabled = false;
     }
   }
 
@@ -274,61 +264,84 @@ console.log("FEthink app.js build: LETTER2-20260206");
     });
   }
 
-  // ---------------- Insert template / Clear ----------------
-  if (insertTemplateBtn && answerTextEl) {
+  // ---------------- Word count live ----------------
+  function updateWordCount() {
+    if (!answerTextEl || !wordCountBox) return;
+    wordCountBox.textContent = `Words: ${wc(answerTextEl.value)}`;
+  }
+  if (answerTextEl) answerTextEl.addEventListener("input", updateWordCount);
+  updateWordCount();
+
+  // ---------------- Template + clear ----------------
+  if (insertTemplateBtn) {
     insertTemplateBtn.addEventListener("click", () => {
-      answerTextEl.value = TEMPLATE_TEXT || answerTextEl.value;
-      updateWordCount();
-      resetFeedback();
+      if (!answerTextEl || !TEMPLATE_TEXT) return;
+      const existing = answerTextEl.value.trim();
+      answerTextEl.value = existing ? `${TEMPLATE_TEXT}\n\n---\n\n${existing}` : TEMPLATE_TEXT;
       answerTextEl.focus();
+      updateWordCount();
     });
   }
 
-  if (clearBtn && answerTextEl) {
+  if (clearBtn) {
     clearBtn.addEventListener("click", () => {
+      if (!answerTextEl) return;
       answerTextEl.value = "";
       updateWordCount();
       resetFeedback();
-      answerTextEl.focus();
     });
   }
 
-  // ---------------- Learn More tabs ----------------
+  // ---------------- Learn more toggle ----------------
+  if (learnMoreBtn && frameworkPanel) {
+    learnMoreBtn.addEventListener("click", () => {
+      const isOpen = frameworkPanel.style.display === "block";
+      if (isOpen) {
+        frameworkPanel.style.display = "none";
+        frameworkPanel.setAttribute("aria-hidden", "true");
+        learnMoreBtn.setAttribute("aria-expanded", "false");
+      } else {
+        frameworkPanel.style.display = "block";
+        frameworkPanel.setAttribute("aria-hidden", "false");
+        learnMoreBtn.setAttribute("aria-expanded", "true");
+      }
+    });
+  }
+
+  // ---------------- Model AI letter toggle ----------------
+  
+  // ---------------- Tabs ----------------
   let activeTabKey = "gdpr";
 
-  function setActiveTab(key) {
-    activeTabKey = key;
+  function setActiveTab(tabKey) {
+    activeTabKey = tabKey;
 
     tabButtons.forEach((btn) => {
-      const k = btn.getAttribute("data-tab");
-      btn.classList.toggle("active", k === key);
+      const key = btn.getAttribute("data-tab");
+      const isActive = key === tabKey;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      btn.setAttribute("tabindex", isActive ? "0" : "-1");
     });
 
-    tabPanels.forEach((panel) => {
-      const k = panel.getAttribute("data-panel");
-      panel.style.display = k === key ? "block" : "none";
+    tabPanels.forEach((p) => {
+      const key = p.getAttribute("data-panel");
+      const show = key === tabKey;
+      p.style.display = show ? "block" : "none";
+      p.setAttribute("aria-hidden", show ? "false" : "true");
     });
   }
 
   tabButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = btn.getAttribute("data-tab");
-      if (key) setActiveTab(key);
+      if (!key) return;
+      setActiveTab(key);
     });
   });
 
-  if (learnMoreBtn && frameworkPanel) {
-    learnMoreBtn.addEventListener("click", () => {
-      const isOpen = frameworkPanel.style.display === "block";
-      frameworkPanel.style.display = isOpen ? "none" : "block";
-      frameworkPanel.setAttribute("aria-hidden", isOpen ? "true" : "false");
-      learnMoreBtn.setAttribute("aria-expanded", isOpen ? "false" : "true");
-    });
-  }
-
-  // ---------------- Render framework ----------------
-  function renderFramework(framework) {
-    if (!framework) {
+  function renderFrameworkTabs(framework) {
+    if (!framework || typeof framework !== "object") {
       if (learnMoreWrap) learnMoreWrap.style.display = "none";
       return;
     }
@@ -364,29 +377,24 @@ console.log("FEthink app.js build: LETTER2-20260206");
 
   // ---------------- Render Model AI letter ----------------
   function renderModelLetter(letterText) {
-    if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
+  if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
 
-    const txt = String(letterText || "").trim();
+  const txt = String(letterText || "").trim();
 
-    // No letter returned -> hide everything
-    if (!txt) {
-      modelLetterWrap.style.display = "none";
-      modelLetterWrap.classList.remove("open");
-      modelLetterPanel.style.display = "none";
-      modelLetterPanel.setAttribute("aria-hidden", "true");
-      modelLetterBtn.setAttribute("aria-expanded", "false");
-      modelLetterText.textContent = "";
-      return;
-    }
-
-    // Letter exists -> show wrapper, keep collapsed by default
-    modelLetterText.textContent = txt;
-    modelLetterWrap.style.display = "block";
-    modelLetterWrap.classList.remove("open");
-    modelLetterPanel.style.display = "none";
-    modelLetterPanel.setAttribute("aria-hidden", "true");
-    modelLetterBtn.setAttribute("aria-expanded", "false");
+  if (!txt) {
+    modelLetterWrap.style.display = "none";
+    modelLetterText.textContent = "";
+    return;
   }
+
+  modelLetterText.textContent = txt;
+
+  // show wrapper, keep collapsed by default
+  modelLetterWrap.style.display = "block";
+  modelLetterPanel.style.display = "none";
+  modelLetterPanel.setAttribute("aria-hidden", "true");
+  modelLetterBtn.setAttribute("aria-expanded", "false");
+}
 
   // ---------------- Render strengths/tags/grid ----------------
   function renderStrengths(strengths) {
@@ -427,77 +435,121 @@ console.log("FEthink app.js build: LETTER2-20260206");
       return;
     }
 
-    gEthical.textContent = grid.ethical ?? "—";
-    gImpact.textContent = grid.impact ?? "—";
-    gLegal.textContent = grid.legal ?? "—";
-    gRecs.textContent = grid.recommendations ?? "—";
-    gStructure.textContent = grid.structure ?? "—";
+    // Object-style grid
+    if (!Array.isArray(grid)) {
+      gEthical.textContent = grid.ethical || "—";
+      gImpact.textContent = grid.impact || "—";
+      gLegal.textContent = grid.legal || "—";
+      gRecs.textContent = grid.recs || "—";
+      gStructure.textContent = grid.structure || "—";
+      gridWrap.style.display = "block";
+      return;
+    }
 
+    // Array-style support (if ever used)
+    const getStatus = (label) => {
+      const row = grid.find((r) => (r.label || "").toLowerCase() === label.toLowerCase());
+      return row ? row.status || "—" : "—";
+    };
+
+    gEthical.textContent = getStatus("Role");
+    gImpact.textContent = getStatus("Task");
+    gLegal.textContent = getStatus("Context");
+    gRecs.textContent = getStatus("Format");
+    gStructure.textContent = "—";
     gridWrap.style.display = "block";
   }
 
-  // ---------------- Mark / Submit ----------------
+  // ---------------- Submit for marking ----------------
   async function mark() {
     resetFeedback();
 
-    const text = String(answerTextEl?.value || "");
-    const count = wc(text);
+    const answerText = (answerTextEl?.value || "").trim();
+    const words = wc(answerText);
+
+    if (!feedbackBox) return;
+
+    if (words === 0) {
+      feedbackBox.textContent = `Write your answer first (aim for at least ${MIN_GATE} words).`;
+      return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    feedbackBox.textContent = "Marking…";
+    if (wordCountBig) wordCountBig.textContent = String(words);
 
     try {
       const res = await fetch("/api/mark", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ answerText })
       });
 
-      const data = await res.json();
-
-      if (data?.gated === true) {
-        showGate("");
+      if (res.status === 401) {
+        showGate("Session expired. Please re-enter the access code from your Payhip lesson.");
         return;
       }
 
-      if (data?.wordCount !== undefined) {
-        if (wordCountBig) wordCountBig.textContent = String(data.wordCount);
+      const data = await res.json();
+      const result = data?.result;
+
+      if (!data?.ok || !result) {
+        feedbackBox.textContent = "Could not mark your answer. Please try again.";
+        return;
       }
 
-      if (data?.feedback) {
-        if (feedbackBox) feedbackBox.textContent = data.feedback;
+      if (wordCountBig) wordCountBig.textContent = String(result.wordCount ?? words);
+
+      // Gated: minimal message only
+      if (result.gated) {
+        if (scoreBig) scoreBig.textContent = "—";
+        feedbackBox.textContent = result.message || "Please add more detail.";
+        resetExtras();
+        return;
       }
 
-      if (data?.score !== undefined && data?.score !== null) {
-        if (scoreBig) scoreBig.textContent = String(data.score);
-      }
+      // Score
+      if (scoreBig) scoreBig.textContent = `${result.score}/10`;
 
-      renderStrengths(data?.strengths);
-      renderTags(data?.tags);
-      renderGrid(data?.grid);
-      renderFramework(data?.framework);
+      // Strengths / tags / grid
+      renderStrengths(result.strengths);
+      renderTags(result.tags);
+      renderGrid(result.grid);
 
-      // model answer prompt
-      if (modelWrap && modelAnswerEl) {
-        const txt = String(data?.modelAnswer || "").trim();
-        if (txt) {
-          modelAnswerEl.textContent = txt;
-          modelWrap.style.display = "block";
-        } else {
-          modelWrap.style.display = "none";
-          modelAnswerEl.textContent = "";
-        }
-      }
+      // Improvement notes
+      feedbackBox.textContent = result.feedback || result.message || "";
 
-      // Model AI letter (only when server returns it)
-      renderModelLetter(data?.modelAiLetter);
+      // Learn more
+      if (result.framework) renderFrameworkTabs(result.framework);
 
+      // Model answer (prompt)
+     if (modelWrap && modelAnswerEl) {
+  if (result.modelAnswer) {
+    modelAnswerEl.textContent = result.modelAnswer;
+    modelWrap.style.display = "block";
+  } else {
+    modelWrap.style.display = "none";
+  }
+}
+
+      // NEW: Model AI letter dropdown
+      renderModelLetter(result.modelAiLetter);
     } catch (e) {
-      console.error(e);
-      if (feedbackBox) feedbackBox.textContent = "Something went wrong. Please try again.";
+      feedbackBox.textContent = "Network issue. Please try again.";
+      console.error("mark failed:", e);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   }
 
   if (submitBtn) submitBtn.addEventListener("click", mark);
 
-  // ---------------- Init ----------------
-  loadConfig();
+  // ---------------- Initial load ----------------
+  loadConfig()
+    .then(() => showGate())
+    .catch((e) => {
+      console.error("initial load failed:", e);
+      showGate("Please enter the access code from your Payhip lesson.");
+    });
 })();
