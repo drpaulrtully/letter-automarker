@@ -504,12 +504,14 @@
       if (result.framework) renderFrameworkTabs(result.framework);
 
       // Model answer (prompt)
-      if (result.modelAnswer && modelAnswerEl && modelWrap) {
-        modelAnswerEl.textContent = result.modelAnswer;
-        modelWrap.style.display = "block";
-      } else if (modelWrap) {
-        modelWrap.style.display = "none";
-      }
+     if (modelWrap && modelAnswerEl) {
+  if (result.modelAnswer) {
+    modelAnswerEl.textContent = result.modelAnswer;
+    modelWrap.style.display = "block";
+  } else {
+    modelWrap.style.display = "none";
+  }
+}
 
       // NEW: Model AI letter dropdown
       renderModelLetter(result.modelAiLetter);
