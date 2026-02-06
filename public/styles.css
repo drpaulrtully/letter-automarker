@@ -532,3 +532,5 @@ button.full[aria-expanded="true"]::after{
 #modelLetterText {
   margin-top: 6px;
 }
+/* If anything invisible is blocking clicks, this reveals it fast */
+#gate[style*="display: none"] { pointer-events: none; }

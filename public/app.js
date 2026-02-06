@@ -74,6 +74,21 @@ console.log("FEthink app.js build: LETTER2-20260206");
   const modelLetterPanel = document.getElementById("modelLetterPanel");
   const modelLetterText = document.getElementById("modelLetterText");
 
+// Bulletproof delegated toggle for Model AI letter
+document.addEventListener("click", (e) => {
+  const btn = e.target && e.target.closest ? e.target.closest("#modelLetterBtn") : null;
+  if (!btn) return;
+
+  const panel = document.getElementById("modelLetterPanel");
+  if (!panel) return;
+
+  const isOpen = panel.style.display === "block";
+
+  panel.style.display = isOpen ? "none" : "block";
+  panel.setAttribute("aria-hidden", isOpen ? "true" : "false");
+  btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+});
+
   // ---------------- Local state ----------------
   let TEMPLATE_TEXT = "";
   let MIN_GATE = 20;
@@ -279,21 +294,7 @@ console.log("FEthink app.js build: LETTER2-20260206");
   }
 
   // ---------------- Model AI letter toggle ----------------
-  if (modelLetterBtn && modelLetterPanel) {
-    modelLetterBtn.addEventListener("click", () => {
-      const isOpen = modelLetterPanel.style.display === "block";
-      if (isOpen) {
-        modelLetterPanel.style.display = "none";
-        modelLetterPanel.setAttribute("aria-hidden", "true");
-        modelLetterBtn.setAttribute("aria-expanded", "false");
-      } else {
-        modelLetterPanel.style.display = "block";
-        modelLetterPanel.setAttribute("aria-hidden", "false");
-        modelLetterBtn.setAttribute("aria-expanded", "true");
-      }
-    });
-  }
-
+  
   // ---------------- Tabs ----------------
   let activeTabKey = "gdpr";
 
