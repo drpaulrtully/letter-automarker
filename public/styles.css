@@ -539,6 +539,14 @@ button.full[aria-expanded="true"]::after{
   max-height: none !important;
   z-index: 10;
 }
+#modelLetterPanel {
+  display: none;
+}
+
+#modelLetterWrap.open #modelLetterPanel {
+  display: block;
+}
+
 #modelLetterWrap {
   overflow: visible;
   position
