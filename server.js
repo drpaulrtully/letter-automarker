@@ -170,18 +170,99 @@ const MODEL_AI_LETTER = [
 const ROLE_HITS = [
   "role:",
   "act as",
+  "as an",
+  "as a",
   "events coordinator",
-  "events co-ordinator",
   "event coordinator",
+  "events co-ordinator",
   "event co-ordinator",
+  "events coordinator",
+  "events co ordinator",
+  "event coordinator",
+  "event co ordinator",
   "coordinator",
   "co-ordinator",
-  "partnership",
-  "partnerships"
+  "co ordinator",
+  "events lead",
+  "events manager",
+  "partnership lead",
+  "partnerships lead",
+  "partnership manager",
+  "partnerships manager",
+  "sponsorship manager",
+  "partnerships and events",
+  "events and partnerships"
 ];
-const TASK_HITS = ["task:", "write", "draft", "email", "invite", "inviting", "sponsor", "sponsorship"];
-const CONTEXT_HITS = ["context:", "long-standing", "longstanding", "budget", "pressure", "conference", "prospectus", "print", "next week", "deadline", "customer", "client"];
-const FORMAT_HITS = ["format:", "4", "5", "paragraph", "tone", "warm", "concise", "call to action", "structure", "professional"];
+
+const TASK_HITS = [
+  "task:",
+  "write",
+  "draft",
+  "compose",
+  "prepare",
+  "email",
+  "message",
+  "inviting",
+  "invite",
+  "invitation",
+  "request",
+  "approach",
+  "ask",
+  "sponsor",
+  "sponsorship",
+  "exhibition",
+  "stall"
+];
+
+const CONTEXT_HITS = [
+  "context:",
+  "audience:",
+  "long-standing",
+  "longstanding",
+  "long term",
+  "long-term",
+  "loyal customer",
+  "existing customer",
+  "customer",
+  "client",
+  "relationship",
+  "partnership",
+  "budget",
+  "pressure",
+  "budget pressures",
+  "financial",
+  "conference",
+  "annual conference",
+  "exhibition",
+  "prospectus",
+  "print",
+  "deadline",
+  "next week",
+  "time is limited",
+  "time limited",
+  "urgent"
+];
+
+const FORMAT_HITS = [
+  "format:",
+  "structure",
+  "tone",
+  "professional",
+  "warm",
+  "courteous",
+  "concise",
+  "polite",
+  "4 paragraphs",
+  "5 paragraphs",
+  "four paragraphs",
+  "five paragraphs",
+  "short paragraphs",
+  "call to action",
+  "cta",
+  "closing",
+  "sign off",
+  "clear next step"
+];
 
 function statusFromLevel(level) {
   if (level >= 2) return "✓ Secure";
@@ -213,7 +294,11 @@ function markPrompt(answerText) {
     };
   }
 
-  const t = String(answerText || "").toLowerCase();
+const t = String(answerText || "")
+  .toLowerCase()
+  .replaceAll("–", "-")
+  .replaceAll("—", "-")
+  .replaceAll("’", "'");
 
   const hasRole = hasAny(t, ROLE_HITS);
   const hasTask = hasAny(t, TASK_HITS);
