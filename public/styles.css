@@ -588,3 +588,21 @@ button.full[aria-expanded="true"]::after{
   line-height: 1.6;
   opacity: 1;
 }
+/* ✅ FINAL OVERRIDE — make Model AI letter text visible */
+#modelLetterText{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  color:#111827 !important;
+  background:#ffffff !important;
+  white-space:pre-wrap !important;
+  font-size:14px !important;
+  line-height:1.6 !important;
+  padding:12px !important;
+  min-height:80px !important;
+}
+
+/* ensure the panel is actually showing when opened */
+#modelLetterWrap.open #modelLetterPanel{
+  display:block !important;
+}
