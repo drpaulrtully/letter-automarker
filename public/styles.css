@@ -606,3 +606,6 @@ button.full[aria-expanded="true"]::after{
 #modelLetterWrap.open #modelLetterPanel{
   display:block !important;
 }
+/* SAFE FIX: doesn't touch panel open/close, only ensures text paints + panel can grow */
+#modelLetterText { color: var(--text) !important; -webkit-text-fill-color: var(--text) !important; }
+#modelLetterPanel, #modelLetterText { max-height: none !important; height: auto !important; overflow: visible !important; }
