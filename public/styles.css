@@ -524,13 +524,13 @@ button.full[aria-expanded="true"]::after{
   color: var(--muted);
   font-size:12px;
 }
-/* MODEL LETTER - CLEAN + VISIBLE */
-#modelLetterPanel * {
+/* MODEL LETTER - TOGGLE + BLACK TEXT */
+#modelLetterWrap.open #modelLetterPanel {
+  display: block !important;
+}
+#modelLetterPanel .fwText,
+#modelLetterText {
   color: #111827 !important;
   opacity: 1 !important;
 }
-#modelLetterText {
-  font-size: 14px !important;
-  background: white !important;
-  white-space: pre-wrap !important;
-}
+
