@@ -1,18 +1,16 @@
 /* =========================================================
    FEthink — Automarker (Prompting)
    Task: Sponsorship invitation prompt (RTCF)
-
    - Access code gate -> signed httpOnly cookie session
    - Marking rules (server-driven via /api/mark):
-     = min words: score + strengths + tags + grid + Learn More + model answer
-     + extra dropdown: Model AI letter to customer
-========================================================= */
+       <min words: "Please add..." only; no score; no extras
+       >=min words: score + strengths + tags + grid + Learn More + model answer
+       + extra dropdown: Model AI letter to customer
+   ========================================================= */
 
 (function () {
-  console.log("FEthink app.js build: LETTER2-20260206");
-
+console.log("FEthink app.js build: LETTER2-20260206");
   // ---------------- DOM refs (null-safe) ----------------
-
   const gateEl = document.getElementById("gate");
   const codeInput = document.getElementById("codeInput");
   const unlockBtn = document.getElementById("unlockBtn");
@@ -28,8 +26,10 @@
   const insertTemplateBtn = document.getElementById("insertTemplateBtn");
   const clearBtn = document.getElementById("clearBtn");
   const answerTextEl = document.getElementById("answerText");
+
   const submitBtn = document.getElementById("submitBtn");
   const wordCountBox = document.getElementById("wordCountBox");
+
   const scoreBig = document.getElementById("scoreBig");
   const wordCountBig = document.getElementById("wordCountBig");
   const feedbackBox = document.getElementById("feedbackBox");
@@ -37,8 +37,10 @@
   // Strengths / Tags / Grid
   const strengthsWrap = document.getElementById("strengthsWrap");
   const strengthsList = document.getElementById("strengthsList");
+
   const tagsWrap = document.getElementById("tagsWrap");
   const tagsRow = document.getElementById("tagsRow");
+
   const gridWrap = document.getElementById("gridWrap");
   const gEthical = document.getElementById("gEthical");
   const gImpact = document.getElementById("gImpact");
@@ -52,6 +54,7 @@
   const frameworkPanel = document.getElementById("frameworkPanel");
   const tabButtons = Array.from(document.querySelectorAll(".tabBtn"));
   const tabPanels = Array.from(document.querySelectorAll(".tabPanel"));
+
   const gdprExpectation = document.getElementById("gdprExpectation");
   const gdprCase = document.getElementById("gdprCase");
   const unescoExpectation = document.getElementById("unescoExpectation");
@@ -65,50 +68,67 @@
   const modelWrap = document.getElementById("modelWrap");
   const modelAnswerEl = document.getElementById("modelAnswer");
 
-  // Model AI letter dropdown
+  // NEW: Model AI letter dropdown
   const modelLetterWrap = document.getElementById("modelLetterWrap");
   const modelLetterBtn = document.getElementById("modelLetterBtn");
   const modelLetterPanel = document.getElementById("modelLetterPanel");
   const modelLetterText = document.getElementById("modelLetterText");
 
-  // ---------------- Model AI letter toggle (single, clean) ----------------
+// ===============================
+// Model AI letter toggle (single working block)
+// ===============================
+if (modelLetterWrap && modelLetterBtn && modelLetterPanel) {
+  modelLetterBtn.addEventListener("click", (e) => {
+    e.preventDefault();
 
-  if (modelLetterBtn && modelLetterPanel) {
-    modelLetterBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log("✅ Model letter button clicked!");
+    // If wrapper was hidden until a letter arrives, reveal it first
+    if (modelLetterWrap.style.display === "none") {
+      modelLetterWrap.style.display = "block";
+    }
 
-      const isOpen = modelLetterPanel.style.display === "block";
-      if (isOpen) {
-        modelLetterPanel.style.display = "none";
-        modelLetterPanel.setAttribute("aria-hidden", "true");
-        modelLetterBtn.setAttribute("aria-expanded", "false");
-        console.log("❌ Panel closed");
-      } else {
-        modelLetterPanel.style.display = "block";
-        modelLetterPanel.setAttribute("aria-hidden", "false");
-        modelLetterBtn.setAttribute("aria-expanded", "true");
-        console.log("✅ Panel opened");
-      }
-    });
+    const isOpen = modelLetterWrap.classList.toggle("open");
+    modelLetterBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    modelLetterPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
 
-    // TEMP: test helper – type testLetter() in console
-    window.testLetter = function () {
-      renderModelLetter(
-        "Dear Customer,\n\nThis is a test AI letter.\n\nBest,\nFEthink"
-      );
-      console.log("🧪 Test letter loaded - now click button!");
-    };
-  }
+    console.log("✅ Model letter toggle:", isOpen ? "OPEN" : "CLOSED");
+  });
+}
+
+// Bulletproof delegated toggle for Model AI letter
+// IMPROVED: Direct toggle for Model AI letter (reliable, with logging)
+if (modelLetterBtn && modelLetterPanel) {
+  modelLetterBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("✅ Model letter button clicked!");
+    
+    const isOpen = modelLetterPanel.style.display === "block";
+    if (isOpen) {
+      modelLetterPanel.style.display = "none";
+      modelLetterPanel.setAttribute("aria-hidden", "true");
+      modelLetterBtn.setAttribute("aria-expanded", "false");
+      console.log("❌ Panel closed");
+    } else {
+      modelLetterPanel.style.display = "block";
+      modelLetterPanel.setAttribute("aria-hidden", "false");
+      modelLetterBtn.setAttribute("aria-expanded", "true");
+      console.log("✅ Panel opened");
+    }
+  });
+  
+  // TEMP TEST BUTTON (remove later)
+  window.testLetter = function() {
+    renderModelLetter("Dear Customer,\n\nThis is a test AI letter.\n\nBest,\nFEthink");
+    console.log("🧪 Test letter loaded - now click button!");
+  };
+}
+
 
   // ---------------- Local state ----------------
-
   let TEMPLATE_TEXT = "";
   let MIN_GATE = 20;
 
   // ---------------- Helpers ----------------
-
   function wc(text) {
     const t = String(text || "").trim();
     if (!t) return 0;
@@ -161,6 +181,7 @@
     }
     if (learnMoreBtn) learnMoreBtn.setAttribute("aria-expanded", "false");
 
+    // Clear Learn More content
     if (gdprExpectation) gdprExpectation.textContent = "—";
     if (gdprCase) gdprCase.textContent = "—";
     if (unescoExpectation) unescoExpectation.textContent = "—";
@@ -192,13 +213,13 @@
   }
 
   // ---------------- Config load (NAV FIRST) ----------------
-
   async function loadConfig() {
     try {
       const res = await fetch("/api/config", { credentials: "include" });
       const data = await res.json();
       if (!data?.ok) return;
 
+      // NAV FIRST
       if (backToCourse && data.courseBackUrl) {
         backToCourse.href = data.courseBackUrl;
         backToCourse.style.display = "inline-block";
@@ -208,12 +229,8 @@
         nextLesson.style.display = "inline-block";
       }
 
-      if (questionTextEl) {
-        questionTextEl.textContent = data.questionText || "Task loaded.";
-      }
-      if (targetWordsEl) {
-        targetWordsEl.textContent = data.targetWords || "20–300";
-      }
+      if (questionTextEl) questionTextEl.textContent = data.questionText || "Task loaded.";
+      if (targetWordsEl) targetWordsEl.textContent = data.targetWords || "20–300";
 
       MIN_GATE = data.minWordsGate ?? 20;
       if (minGateEl) minGateEl.textContent = String(MIN_GATE);
@@ -225,12 +242,10 @@
   }
 
   // ---------------- Gate unlock ----------------
-
   async function unlock() {
     const code = (codeInput?.value || "").trim();
     if (!code) {
-      if (gateMsg)
-        gateMsg.textContent = "Please enter the access code from your lesson.";
+      if (gateMsg) gateMsg.textContent = "Please enter the access code from your lesson.";
       return;
     }
 
@@ -242,13 +257,13 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code })
       });
+
       const data = await res.json();
+
       if (!res.ok || !data?.ok) {
-        if (gateMsg)
-          gateMsg.textContent =
-            "That code didn’t work. Check it and try again.";
+        if (gateMsg) gateMsg.textContent = "That code didn’t work. Check it and try again.";
         return;
       }
 
@@ -270,24 +285,19 @@
   }
 
   // ---------------- Word count live ----------------
-
   function updateWordCount() {
     if (!answerTextEl || !wordCountBox) return;
     wordCountBox.textContent = `Words: ${wc(answerTextEl.value)}`;
   }
-
   if (answerTextEl) answerTextEl.addEventListener("input", updateWordCount);
   updateWordCount();
 
   // ---------------- Template + clear ----------------
-
   if (insertTemplateBtn) {
     insertTemplateBtn.addEventListener("click", () => {
       if (!answerTextEl || !TEMPLATE_TEXT) return;
       const existing = answerTextEl.value.trim();
-      answerTextEl.value = existing
-        ? `${TEMPLATE_TEXT}\n\n---\n\n${existing}`
-        : TEMPLATE_TEXT;
+      answerTextEl.value = existing ? `${TEMPLATE_TEXT}\n\n---\n\n${existing}` : TEMPLATE_TEXT;
       answerTextEl.focus();
       updateWordCount();
     });
@@ -303,7 +313,6 @@
   }
 
   // ---------------- Learn more toggle ----------------
-
   if (learnMoreBtn && frameworkPanel) {
     learnMoreBtn.addEventListener("click", () => {
       const isOpen = frameworkPanel.style.display === "block";
@@ -319,12 +328,14 @@
     });
   }
 
+  // ---------------- Model AI letter toggle ----------------
+  
   // ---------------- Tabs ----------------
-
   let activeTabKey = "gdpr";
 
   function setActiveTab(tabKey) {
     activeTabKey = tabKey;
+
     tabButtons.forEach((btn) => {
       const key = btn.getAttribute("data-tab");
       const isActive = key === tabKey;
@@ -332,6 +343,7 @@
       btn.setAttribute("aria-selected", isActive ? "true" : "false");
       btn.setAttribute("tabindex", isActive ? "0" : "-1");
     });
+
     tabPanels.forEach((p) => {
       const key = p.getAttribute("data-panel");
       const show = key === tabKey;
@@ -361,18 +373,19 @@
 
     if (gdprExpectation) gdprExpectation.textContent = gdpr.expectation || "—";
     if (gdprCase) gdprCase.textContent = gdpr.case || "—";
-    if (unescoExpectation)
-      unescoExpectation.textContent = unesco.expectation || "—";
+
+    if (unescoExpectation) unescoExpectation.textContent = unesco.expectation || "—";
     if (unescoCase) unescoCase.textContent = unesco.case || "—";
-    if (ofstedExpectation)
-      ofstedExpectation.textContent = ofsted.expectation || "—";
+
+    if (ofstedExpectation) ofstedExpectation.textContent = ofsted.expectation || "—";
     if (ofstedCase) ofstedCase.textContent = ofsted.case || "—";
-    if (jiscExpectation)
-      jiscExpectation.textContent = jisc.expectation || "—";
+
+    if (jiscExpectation) jiscExpectation.textContent = jisc.expectation || "—";
     if (jiscCase) jiscCase.textContent = jisc.case || "—";
 
     if (learnMoreWrap) learnMoreWrap.style.display = "block";
 
+    // Keep collapsed by default
     if (frameworkPanel) {
       frameworkPanel.style.display = "none";
       frameworkPanel.setAttribute("aria-hidden", "true");
@@ -383,33 +396,27 @@
   }
 
   // ---------------- Render Model AI letter ----------------
-
   function renderModelLetter(letterText) {
-    if (
-      !modelLetterWrap ||
-      !modelLetterPanel ||
-      !modelLetterBtn ||
-      !modelLetterText
-    )
-      return;
+  if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
 
-    const txt = String(letterText || "").trim();
-    if (!txt) {
-      modelLetterWrap.style.display = "none";
-      modelLetterText.textContent = "";
-      return;
-    }
+  const txt = String(letterText || "").trim();
 
-    modelLetterText.textContent = txt;
-    // Show wrapper, keep collapsed by default
-    modelLetterWrap.style.display = "block";
-    modelLetterPanel.style.display = "none";
-    modelLetterPanel.setAttribute("aria-hidden", "true");
-    modelLetterBtn.setAttribute("aria-expanded", "false");
+  if (!txt) {
+    modelLetterWrap.style.display = "none";
+    modelLetterText.textContent = "";
+    return;
   }
 
-  // ---------------- Render strengths / tags / grid ----------------
+  modelLetterText.textContent = txt;
 
+  // show wrapper, keep collapsed by default
+  modelLetterWrap.style.display = "block";
+  modelLetterPanel.style.display = "none";
+  modelLetterPanel.setAttribute("aria-hidden", "true");
+  modelLetterBtn.setAttribute("aria-expanded", "false");
+}
+
+  // ---------------- Render strengths/tags/grid ----------------
   function renderStrengths(strengths) {
     if (!strengthsWrap || !strengthsList) return;
     if (!Array.isArray(strengths) || strengths.length === 0) {
@@ -419,18 +426,15 @@
     }
     strengthsList.innerHTML = strengths
       .slice(0, 3)
-      .map((s) => `${escapeHtml(s)}`)
+      .map((s) => `<li>${escapeHtml(s)}</li>`)
       .join("");
     strengthsWrap.style.display = "block";
   }
 
   function tagBadge(name, status) {
     const symbol = status === "ok" ? "✔" : status === "mid" ? "◐" : "✗";
-    const cls =
-      status === "ok" ? "tag ok" : status === "mid" ? "tag mid" : "tag bad";
-    return `<span class="${cls}"><span class="tagStatus">${symbol}</span>${escapeHtml(
-      name
-    )}</span>`;
+    const cls = status === "ok" ? "tag ok" : status === "mid" ? "tag mid" : "tag bad";
+    return `<span class="${cls}"><span class="tagStatus">${symbol}</span>${escapeHtml(name)}</span>`;
   }
 
   function renderTags(tags) {
@@ -440,16 +444,12 @@
       tagsRow.innerHTML = "";
       return;
     }
-    tagsRow.innerHTML = tags
-      .map((t) => tagBadge(t.name || t.label || "", t.status))
-      .join("");
+    tagsRow.innerHTML = tags.map((t) => tagBadge(t.name || t.label || "", t.status)).join("");
     tagsWrap.style.display = "block";
   }
 
   function renderGrid(grid) {
-    if (!gridWrap || !gEthical || !gImpact || !gLegal || !gRecs || !gStructure)
-      return;
-
+    if (!gridWrap || !gEthical || !gImpact || !gLegal || !gRecs || !gStructure) return;
     if (!grid) {
       gridWrap.style.display = "none";
       return;
@@ -468,11 +468,10 @@
 
     // Array-style support (if ever used)
     const getStatus = (label) => {
-      const row = grid.find(
-        (r) => (r.label || "").toLowerCase() === label.toLowerCase()
-      );
+      const row = grid.find((r) => (r.label || "").toLowerCase() === label.toLowerCase());
       return row ? row.status || "—" : "—";
     };
+
     gEthical.textContent = getStatus("Role");
     gImpact.textContent = getStatus("Task");
     gLegal.textContent = getStatus("Context");
@@ -482,7 +481,6 @@
   }
 
   // ---------------- Submit for marking ----------------
-
   async function mark() {
     resetFeedback();
 
@@ -505,32 +503,28 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ answerText }),
+        body: JSON.stringify({ answerText })
       });
 
       if (res.status === 401) {
-        showGate(
-          "Session expired. Please re-enter the access code from your Payhip lesson."
-        );
+        showGate("Session expired. Please re-enter the access code from your Payhip lesson.");
         return;
       }
 
       const data = await res.json();
       const result = data?.result;
+
       if (!data?.ok || !result) {
-        feedbackBox.textContent =
-          "Could not mark your answer. Please try again.";
+        feedbackBox.textContent = "Could not mark your answer. Please try again.";
         return;
       }
 
-      if (wordCountBig)
-        wordCountBig.textContent = String(result.wordCount ?? words);
+      if (wordCountBig) wordCountBig.textContent = String(result.wordCount ?? words);
 
       // Gated: minimal message only
       if (result.gated) {
         if (scoreBig) scoreBig.textContent = "—";
-        feedbackBox.textContent =
-          result.message || "Please add more detail.";
+        feedbackBox.textContent = result.message || "Please add more detail.";
         resetExtras();
         return;
       }
@@ -550,16 +544,16 @@
       if (result.framework) renderFrameworkTabs(result.framework);
 
       // Model answer (prompt)
-      if (modelWrap && modelAnswerEl) {
-        if (result.modelAnswer) {
-          modelAnswerEl.textContent = result.modelAnswer;
-          modelWrap.style.display = "block";
-        } else {
-          modelWrap.style.display = "none";
-        }
-      }
+     if (modelWrap && modelAnswerEl) {
+  if (result.modelAnswer) {
+    modelAnswerEl.textContent = result.modelAnswer;
+    modelWrap.style.display = "block";
+  } else {
+    modelWrap.style.display = "none";
+  }
+}
 
-      // Model AI letter
+      // NEW: Model AI letter dropdown
       renderModelLetter(result.modelAiLetter);
     } catch (e) {
       feedbackBox.textContent = "Network issue. Please try again.";
@@ -572,9 +566,8 @@
   if (submitBtn) submitBtn.addEventListener("click", mark);
 
   // ---------------- Initial load ----------------
-
   loadConfig()
-    .then(() => showGate("Please enter the access code from your Payhip lesson."))
+    .then(() => showGate())
     .catch((e) => {
       console.error("initial load failed:", e);
       showGate("Please enter the access code from your Payhip lesson.");
