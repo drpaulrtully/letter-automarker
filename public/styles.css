@@ -524,56 +524,85 @@ button.full[aria-expanded="true"]::after{
   color: var(--muted);
   font-size:12px;
 }
-/* ===========================
-   Model AI letter dropdown — SINGLE SOURCE OF TRUTH
-   =========================== */
+/* --- Model AI letter dropdown (clean + reliable) --- */
+#modelLetterWrap { margin-top: var(--s4); }
 
-#modelLetterWrap{
-  margin-top: var(--s4);
-  overflow: visible;
-}
-
-/* collapsed by default */
-#modelLetterPanel{
+#modelLetterPanel {
   display: none;
   overflow: visible;
   max-height: none;
-  height: auto;
   position: relative;
   z-index: 10;
 }
 
-/* open state */
-#modelLetterWrap.open #modelLetterPanel{
+#modelLetterWrap.open #modelLetterPanel {
   display: block;
 }
 
-#modelLetterPanel .fwRow{
+#modelLetterPanel .fwRow {
   padding: 10px 12px;
-  overflow: visible;
 }
 
-/* force the <pre> to paint + expand */
-#modelLetterText{
-  display: block;
+#modelLetterText {
+  margin-top: 6px;
+  white-space: pre-wrap;
+}
+/* DROPDOWN FULL HEIGHT + VISIBLE TEXT */
+#modelLetterWrap {
+  overflow: visible !important;
+}
+
+#modelLetterPanel {
+  overflow: visible !important;
+  min-height: 120px !important;
+  max-height: none !important;
+}
+
+#modelLetterText {
+  color: var(--text) !important;  /* Black, not muted grey */
+  background: white !important;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+/* --- Model AI letter dropdown (clean + reliable) --- */
+#modelLetterWrap { margin-top: var(--s4); overflow: visible; }
+
+#modelLetterPanel {
+  display: none;              /* hidden by default */
+  overflow: visible;
+  max-height: none;
+  position: relative;
+  z-index: 10;
+}
+
+#modelLetterPanel .fwRow { padding: 10px 12px; }
+
+#modelLetterText {
+  margin-top: 6px;
+  padding: 12px;
   white-space: pre-wrap;
   color: var(--text);
   background: #fff;
   font-size: 14px;
   line-height: 1.6;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-
-  /* make sure nothing clips it */
-  overflow: visible;
-  max-height: none;
-  height: auto;
-
-  /* stacking safety */
-  position: relative;
-  z-index: 20;
   opacity: 1;
-  visibility: visible;
-  -webkit-text-fill-color: var(--text);
+}
+/* ✅ FINAL OVERRIDE — make Model AI letter text visible */
+#modelLetterText{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  color:#111827 !important;
+  background:#ffffff !important;
+  white-space:pre-wrap !important;
+  font-size:14px !important;
+  line-height:1.6 !important;
+  padding:12px !important;
+  min-height:80px !important;
+}
+
+/* ensure the panel is actually showing when opened */
+#modelLetterWrap.open #modelLetterPanel{
+  display:block !important;
 }
