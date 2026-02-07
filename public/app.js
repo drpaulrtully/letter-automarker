@@ -9,7 +9,8 @@
    ========================================================= */
 
 (function () {
-console.log("FEthink app.js build: LETTER2-20260206");
+  console.log("FEthink app.js build: LETTER2-20260206");
+
   // ---------------- DOM refs (null-safe) ----------------
   const gateEl = document.getElementById("gate");
   const codeInput = document.getElementById("codeInput");
@@ -68,61 +69,35 @@ console.log("FEthink app.js build: LETTER2-20260206");
   const modelWrap = document.getElementById("modelWrap");
   const modelAnswerEl = document.getElementById("modelAnswer");
 
-  // NEW: Model AI letter dropdown
+  // Model AI letter dropdown
   const modelLetterWrap = document.getElementById("modelLetterWrap");
   const modelLetterBtn = document.getElementById("modelLetterBtn");
   const modelLetterPanel = document.getElementById("modelLetterPanel");
   const modelLetterText = document.getElementById("modelLetterText");
 
-// ===============================
-// Model AI letter toggle (single working block)
-// ===============================
-if (modelLetterWrap && modelLetterBtn && modelLetterPanel) {
-  modelLetterBtn.addEventListener("click", (e) => {
-    e.preventDefault();
+  // ===============================
+  // Model AI letter toggle (SINGLE handler — keep only this)
+  // ===============================
+  if (modelLetterWrap && modelLetterBtn && modelLetterPanel) {
+    modelLetterBtn.addEventListener("click", (e) => {
+      e.preventDefault();
 
-    // If wrapper was hidden until a letter arrives, reveal it first
-    if (modelLetterWrap.style.display === "none") {
-      modelLetterWrap.style.display = "block";
-    }
+      // If wrapper was hidden until a letter arrives, reveal it first
+      if (modelLetterWrap.style.display === "none") {
+        modelLetterWrap.style.display = "block";
+      }
 
-    const isOpen = modelLetterWrap.classList.toggle("open");
-    modelLetterBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
-    modelLetterPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+      const isOpen = modelLetterWrap.classList.toggle("open");
+      modelLetterBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      modelLetterPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
 
-    console.log("✅ Model letter toggle:", isOpen ? "OPEN" : "CLOSED");
-  });
-}
+      // Ensure panel actually shows/hides regardless of CSS
+      modelLetterPanel.style.display = isOpen ? "block" : "none";
+      if (isOpen) modelLetterPanel.scrollIntoView({ block: "nearest", behavior: "smooth" });
 
-// Bulletproof delegated toggle for Model AI letter
-// IMPROVED: Direct toggle for Model AI letter (reliable, with logging)
-if (modelLetterBtn && modelLetterPanel) {
-  modelLetterBtn.addEventListener("click", function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("✅ Model letter button clicked!");
-    
-    const isOpen = modelLetterPanel.style.display === "block";
-    if (isOpen) {
-      modelLetterPanel.style.display = "none";
-      modelLetterPanel.setAttribute("aria-hidden", "true");
-      modelLetterBtn.setAttribute("aria-expanded", "false");
-      console.log("❌ Panel closed");
-    } else {
-      modelLetterPanel.style.display = "block";
-      modelLetterPanel.setAttribute("aria-hidden", "false");
-      modelLetterBtn.setAttribute("aria-expanded", "true");
-      console.log("✅ Panel opened");
-    }
-  });
-  
-  // TEMP TEST BUTTON (remove later)
-  window.testLetter = function() {
-    renderModelLetter("Dear Customer,\n\nThis is a test AI letter.\n\nBest,\nFEthink");
-    console.log("🧪 Test letter loaded - now click button!");
-  };
-}
-
+      console.log("✅ Model letter toggle:", isOpen ? "OPEN" : "CLOSED");
+    });
+  }
 
   // ---------------- Local state ----------------
   let TEMPLATE_TEXT = "";
@@ -328,8 +303,6 @@ if (modelLetterBtn && modelLetterPanel) {
     });
   }
 
-  // ---------------- Model AI letter toggle ----------------
-  
   // ---------------- Tabs ----------------
   let activeTabKey = "gdpr";
 
@@ -397,24 +370,27 @@ if (modelLetterBtn && modelLetterPanel) {
 
   // ---------------- Render Model AI letter ----------------
   function renderModelLetter(letterText) {
-  if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
+    if (!modelLetterWrap || !modelLetterPanel || !modelLetterBtn || !modelLetterText) return;
 
-  const txt = String(letterText || "").trim();
+    const txt = String(letterText || "").trim();
 
-  if (!txt) {
-    modelLetterWrap.style.display = "none";
-    modelLetterText.textContent = "";
-    return;
+    if (!txt) {
+      modelLetterWrap.style.display = "none";
+      modelLetterText.textContent = "";
+      return;
+    }
+
+    modelLetterText.textContent = txt;
+
+    // show wrapper, keep collapsed by default
+    modelLetterWrap.style.display = "block";
+    modelLetterPanel.style.display = "none";
+    modelLetterPanel.setAttribute("aria-hidden", "true");
+    modelLetterBtn.setAttribute("aria-expanded", "false");
+
+    // Ensure wrapper starts closed (no stale state)
+    modelLetterWrap.classList.remove("open");
   }
-
-  modelLetterText.textContent = txt;
-
-  // show wrapper, keep collapsed by default
-  modelLetterWrap.style.display = "block";
-  modelLetterPanel.style.display = "none";
-  modelLetterPanel.setAttribute("aria-hidden", "true");
-  modelLetterBtn.setAttribute("aria-expanded", "false");
-}
 
   // ---------------- Render strengths/tags/grid ----------------
   function renderStrengths(strengths) {
@@ -511,6 +487,11 @@ if (modelLetterBtn && modelLetterPanel) {
         return;
       }
 
+      if (res.status === 403) {
+        showGate("Access code required. Please re-enter the access code from your Payhip lesson.");
+        return;
+      }
+
       const data = await res.json();
       const result = data?.result;
 
@@ -544,16 +525,16 @@ if (modelLetterBtn && modelLetterPanel) {
       if (result.framework) renderFrameworkTabs(result.framework);
 
       // Model answer (prompt)
-     if (modelWrap && modelAnswerEl) {
-  if (result.modelAnswer) {
-    modelAnswerEl.textContent = result.modelAnswer;
-    modelWrap.style.display = "block";
-  } else {
-    modelWrap.style.display = "none";
-  }
-}
+      if (modelWrap && modelAnswerEl) {
+        if (result.modelAnswer) {
+          modelAnswerEl.textContent = result.modelAnswer;
+          modelWrap.style.display = "block";
+        } else {
+          modelWrap.style.display = "none";
+        }
+      }
 
-      // NEW: Model AI letter dropdown
+      // Model AI letter dropdown
       renderModelLetter(result.modelAiLetter);
     } catch (e) {
       feedbackBox.textContent = "Network issue. Please try again.";
