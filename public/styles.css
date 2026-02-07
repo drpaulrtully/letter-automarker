@@ -574,3 +574,11 @@ button.full[aria-expanded="true"]::after{
 #modelLetterText {
   color
 
+/* FORCE LETTER TEXT VISIBLE */
+#modelLetterPanel pre,
+#modelLetterText {
+  color: #111827 !important;
+  background: white !important;
+  font-size: 14px !important;
+  opacity: 1 !important;
+}
