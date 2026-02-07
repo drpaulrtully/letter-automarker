@@ -524,10 +524,7 @@ button.full[aria-expanded="true"]::after{
   color: var(--muted);
   font-size:12px;
 }
-/* MODEL LETTER - TOGGLE + BLACK TEXT */
-#modelLetterWrap.open #modelLetterPanel {
-  display: block !important;
-}
+/* LETTER TEXT BLACK - TOGGLE WORKS */
 #modelLetterPanel .fwText,
 #modelLetterText {
   color: #111827 !important;
