@@ -76,7 +76,7 @@
   const modelLetterText = document.getElementById("modelLetterText");
 
   // ===============================
-  // Model AI letter toggle (SINGLE handler — keep only this)
+  // Model AI letter toggle (SINGLE handler)
   // ===============================
   if (modelLetterWrap && modelLetterBtn && modelLetterPanel) {
     modelLetterBtn.addEventListener("click", (e) => {
@@ -380,16 +380,15 @@
       return;
     }
 
+    // Inject letter text
     modelLetterText.textContent = txt;
 
-    // show wrapper, keep collapsed by default
+    // Show wrapper, keep panel collapsed by default
     modelLetterWrap.style.display = "block";
+    modelLetterWrap.classList.remove("open");
     modelLetterPanel.style.display = "none";
     modelLetterPanel.setAttribute("aria-hidden", "true");
     modelLetterBtn.setAttribute("aria-expanded", "false");
-
-    // Ensure wrapper starts closed (no stale state)
-    modelLetterWrap.classList.remove("open");
   }
 
   // ---------------- Render strengths/tags/grid ----------------
@@ -484,11 +483,6 @@
 
       if (res.status === 401) {
         showGate("Session expired. Please re-enter the access code from your Payhip lesson.");
-        return;
-      }
-
-      if (res.status === 403) {
-        showGate("Access code required. Please re-enter the access code from your Payhip lesson.");
         return;
       }
 
