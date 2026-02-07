@@ -524,9 +524,12 @@ button.full[aria-expanded="true"]::after{
   color: var(--muted);
   font-size:12px;
 }
-/* LETTER TEXT BLACK - TOGGLE WORKS */
-#modelLetterPanel .fwText,
-#modelLetterText {
+
+/* LETTER FIX - TOGGLE + BLACK TEXT */
+#modelLetterPanel {
+  display: none;
+}
+#modelLetterPanel .fwText {
   color: #111827 !important;
   opacity: 1 !important;
 }
