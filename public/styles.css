@@ -547,3 +547,25 @@ button.full[aria-expanded="true"]::after{
   margin-top: 6px;
   white-space: pre-wrap;
 }
+/* DROPDOWN FULL HEIGHT + VISIBLE TEXT */
+#modelLetterWrap {
+  overflow: visible !important;
+}
+
+#modelLetterPanel {
+  overflow: visible !important;
+  min-height: 120px !important;
+  max-height: none !important;
+}
+
+#modelLetterText {
+  color: var(--text) !important;  /* Black, not muted grey */
+  background: white !important;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+/* Force .fwText inside panel */
+#modelLetterPanel .fwText {
+  color: var(--text) !important;
+  opacity
